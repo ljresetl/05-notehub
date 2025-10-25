@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchNotes } from '../../services/noteService';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -15,6 +15,11 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const debouncedSearch = useDebounce(search);
 
+  // ✅ Скидаємо сторінку на 1 при зміні пошуку
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
   const { data } = useQuery({
     queryKey: ['notes', page, debouncedSearch],
     queryFn: () => fetchNotes({ page, perPage: 12, search: debouncedSearch }),
@@ -28,7 +33,11 @@ const App = () => {
       <header className={css.toolbar}>
         <SearchBox value={search} onChange={setSearch} />
         {data?.totalPages && data.totalPages > 1 && (
-          <Pagination pageCount={data.totalPages} onPageChange={setPage} />
+          <Pagination
+            pageCount={data.totalPages}
+            onPageChange={setPage}
+            currentPage={page} // ✅ передаємо актуальну сторінку
+          />
         )}
         <button className={css.button} onClick={handleOpenModal}>
           Create note +
