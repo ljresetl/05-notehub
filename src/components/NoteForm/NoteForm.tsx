@@ -1,8 +1,8 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import css from './NoteForm.module.css';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createNote } from '../../services/noteService';
-import { useQueryClient } from '@tanstack/react-query';
 import type { NoteTag } from '../../types/note';
 
 interface NoteFormProps {
@@ -26,21 +26,31 @@ const NoteForm = ({ onClose }: NoteFormProps) => {
       .required('Required'),
   });
 
-const handleSubmit = async (
-  values: typeof initialValues,
-  { resetForm }: { resetForm: () => void }
-) => {
-  await createNote({
-    title: values.title,
-    content: values.content,
-    tag: values.tag as NoteTag, // 👈 тут каст до NoteTag
+  const { mutate } = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      onClose();
+    },
   });
 
-  queryClient.invalidateQueries({ queryKey: ['notes'] });
-  resetForm();
-  onClose();
-};
-
+  const handleSubmit = (
+    values: typeof initialValues,
+    { resetForm }: { resetForm: () => void }
+  ) => {
+    mutate(
+      {
+        title: values.title,
+        content: values.content,
+        tag: values.tag as NoteTag,
+      },
+      {
+        onSettled: () => {
+          resetForm();
+        },
+      }
+    );
+  };
 
   return (
     <Formik

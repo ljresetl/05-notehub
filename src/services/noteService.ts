@@ -22,8 +22,10 @@ export interface FetchNotesResponse {
   totalPages: number;
 }
 
-export const fetchNotes = async (params: FetchNotesParams): Promise<FetchNotesResponse> => {
-  const response = await axiosInstance.get('', { params });
+export const fetchNotes = async (
+  params: FetchNotesParams
+): Promise<FetchNotesResponse> => {
+  const response = await axiosInstance.get<FetchNotesResponse>('', { params });
   return response.data;
 };
 
@@ -32,11 +34,11 @@ export const createNote = async (note: {
   content: string;
   tag: NoteTag;
 }): Promise<Note> => {
-  const response = await axiosInstance.post('', note);
+  const response = await axiosInstance.post<Note>('', note);
   return response.data;
 };
 
 export const deleteNote = async (id: string): Promise<Note> => {
-  const response = await axiosInstance.delete(`/${id}`);
+  const response = await axiosInstance.delete<Note>(`/${id}`);
   return response.data;
 };

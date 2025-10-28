@@ -15,8 +15,16 @@ const Modal = ({ children, onClose }: ModalProps) => {
       }
     };
 
+    // 🔒 Заблокувати прокрутку
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = originalOverflow; // 🔓 Відновити прокрутку
+    };
   }, [onClose]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {

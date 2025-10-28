@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import {
+  useQuery,
+  keepPreviousData,
+} from '@tanstack/react-query';
 import { fetchNotes } from '../../services/noteService';
 import { useDebounce } from '../../hooks/useDebounce';
 import SearchBox from '../SearchBox/SearchBox';
@@ -8,6 +11,7 @@ import NoteList from '../NoteList/NoteList';
 import Modal from '../Modal/Modal';
 import NoteForm from '../NoteForm/NoteForm';
 import css from './App.module.css';
+import type { FetchNotesResponse } from '../../services/noteService';
 
 const App = () => {
   const [search, setSearch] = useState('');
@@ -15,14 +19,14 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const debouncedSearch = useDebounce(search);
 
-  // ✅ Скидаємо сторінку на 1 при зміні пошуку
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch]);
 
-  const { data } = useQuery({
+  const { data, isFetching, isError } = useQuery<FetchNotesResponse>({
     queryKey: ['notes', page, debouncedSearch],
     queryFn: () => fetchNotes({ page, perPage: 12, search: debouncedSearch }),
+    placeholderData: keepPreviousData,
   });
 
   const handleOpenModal = () => setIsModalOpen(true);
@@ -36,7 +40,7 @@ const App = () => {
           <Pagination
             pageCount={data.totalPages}
             onPageChange={setPage}
-            currentPage={page} // ✅ передаємо актуальну сторінку
+            currentPage={page}
           />
         )}
         <button className={css.button} onClick={handleOpenModal}>
@@ -44,6 +48,8 @@ const App = () => {
         </button>
       </header>
 
+      {isFetching && <p className={css.loading}>Loading...</p>}
+      {isError && <p className={css.error}>Failed to load notes.</p>}
       {data?.notes.length ? <NoteList notes={data.notes} /> : null}
 
       {isModalOpen && (
